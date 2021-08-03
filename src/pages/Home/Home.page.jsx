@@ -1,38 +1,46 @@
-import React, { useRef } from 'react';
-import { Link, useHistory } from 'react-router-dom';
+import React from 'react';
+import HomeCard from '../../components/HomeCard/HomeCard.component';
+import { useFetch } from '../../utils/hooks/useFetch';
+import { useDebounce } from '../../utils/hooks/useDebounce';
 
-import { useAuth } from '../../providers/Auth';
-import './Home.styles.css';
+import { CardsGrid, Homepage } from './Home.styles';
+import { Loader } from '../../components/Loader/Loader.styles';
 
 function HomePage() {
-  const history = useHistory();
-  const sectionRef = useRef(null);
-  const { authenticated, logout } = useAuth();
+  // eslint-disable-next-line no-unused-vars
+  const { data, loading, error, fetchVideos } = useFetch();
 
-  function deAuthenticate(event) {
-    event.preventDefault();
-    logout();
-    history.push('/');
-  }
+  useDebounce(
+    () => {
+      // eslint-disable-next-line react-hooks/rules-of-hooks
+      fetchVideos('getByName', 'Wizeline');
+    },
+    [],
+    300
+  );
 
+  if (error) return <></>;
   return (
-    <section className="homepage" ref={sectionRef}>
-      <h1>Hello stranger!</h1>
-      {authenticated ? (
-        <>
-          <h2>Good to have you back</h2>
-          <span>
-            <Link to="/" onClick={deAuthenticate}>
-              ← logout
-            </Link>
-            <span className="separator" />
-            <Link to="/secret">show me something cool →</Link>
-          </span>
-        </>
+    <Homepage>
+      <h1>First React Mini-challenge</h1>
+      {loading ? (
+        <Loader />
       ) : (
-        <Link to="/login">let me in →</Link>
+        <CardsGrid>
+          {data.map((item) => {
+            return (
+              <HomeCard
+                key={item.etag}
+                videoId={item.id.videoId}
+                imgUrl={item.snippet.thumbnails.default.url}
+                title={item.snippet.title}
+                description={item.snippet.description}
+              />
+            );
+          })}
+        </CardsGrid>
       )}
-    </section>
+    </Homepage>
   );
 }
 
